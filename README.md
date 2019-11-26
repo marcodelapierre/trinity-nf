@@ -9,7 +9,7 @@ Tests have been done with Nextflow version `19.10.0`.
 Jellyfish -> Inchworm -> Chrysalis -> Mini-assemblies -> Gene-to-Trans
 
 The main software requirement is an installation of [Trinity](https://github.com/trinityrnaseq/trinityrnaseq). 
-Tests have been run with Trinity `2.8.6`.  
+Tests have been run with Trinity version `2.8.6`.  
 Usage of a Singularity container runtime is recommended, especially where I/O performance are critical.
 
 
