@@ -1,3 +1,6 @@
+**NOTE**: development of this pipeline is currently paused.  I will resume it when/if relevant.
+
+
 ## Trinity assembly pipeline for USyd
   
 The pipeline requires [Nextflow](https://github.com/nextflow-io/nextflow) to run.
