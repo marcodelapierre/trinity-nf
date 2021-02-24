@@ -1,4 +1,4 @@
-**NOTE**: development of this pipeline is currently STALLED.  It will be resumed it when/if relevant.
+**NOTE**: development of this pipeline is still IN PROGRESS.
 
 
 ## Trinity assembly pipeline for USyd
