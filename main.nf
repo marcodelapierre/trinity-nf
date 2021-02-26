@@ -8,7 +8,7 @@ params.reads='reads_{1,2}.fq.gz'
 
 
 // internal parameters (typically do not need editing)
-params.outprefix='trinity_results_'
+params.outprefix='./'
 params.procout='trinity_out'
 
 process jellyfish {
@@ -81,7 +81,8 @@ process chrysalis {
   tuple val(dir), val(name), path(read1), path(read2), path("${params.procout}")
 
   output:
-  tuple val(dir), val(name), path("${params.procout}/read_partitions/*/*/*inity.reads.fa")
+  tuple val("${dir}/${name}"), val(dir), val(name), path("${params.procout}"), emit: dir
+  tuple val("${dir}/${name}"), val(dir), val(name), path('fasta_list'), emit: list
 //  tuple val(dir), val(name), path("${params.procout}") // test only
 
   script:
@@ -101,24 +102,20 @@ process chrysalis {
     --max_memory \${mem} \
     --CPU ${task.cpus} \
     --no_distributed_trinity_exec
+
+  find ${params.procout}/read_partitions -name '*inity.reads.fa' >fasta_list
   """
 }
 
 
-// process test_post_chrysalis {
-// tag "${dir}/${name}"
-
-// }
-
-
 process butterfly {
-  tag "${dir}/${name}"
+  tag "${dir}/${name}/${read}"
 
   input:
-  tuple val(dir), val(name), path(read)
+  tuple val(dir), val(name), val(read), path(directory)
 
   output:
-  tuple val(dir), val(name), path(read)
+  tuple val(dir), val(name), path("${params.procout}")
 
 // this one has been reworded compared to SIH original, and checked against Trinity code
   script:
@@ -147,11 +144,13 @@ process butterfly {
 
 process aggregate {
   tag "${dir}/${name}"
-  publishDir "${dir}/${params.outprefix}${name}", mode: 'copy'
+  publishDir "${dir}/${params.outprefix}", mode: 'copy', saveAs: { filename -> "${name}_"+filename }
 
   input:
+  tuple val(dir), val(name), path("${params.procout}")
 
   output:
+  tuple val(dir), val(name), path("Trinity.fasta"), path("Trinity.fasta.gene_trans_map")
 
   script:
   """
@@ -162,9 +161,9 @@ process aggregate {
     \${my_trinity}/util/support_scripts/partitioned_trinity_aggregator.pl \
     --token_prefix TRINITY_DN --output_prefix ${params.procout}/Trinity.tmp
 
-  mv ${params.procout}/Trinity.tmp.fasta ${params.procout}/Trinity.fasta
+  mv ${params.procout}/Trinity.tmp.fasta Trinity.fasta
 
-  \${my_trinity}/util/support_scripts/get_Trinity_gene_to_trans_map.pl ${params.procout}/Trinity.fasta > ${params.procout}/Trinity.fasta.gene_trans_map
+  \${my_trinity}/util/support_scripts/get_Trinity_gene_to_trans_map.pl Trinity.fasta > Trinity.fasta.gene_trans_map
   """
 }
 
@@ -177,12 +176,20 @@ workflow {
 
 // tasks
   jellyfish(read_ch)
+
   inchworm(jellyfish.out)
+
   chrysalis(inchworm.out)
 // test 1
-//   chrysalis.out
-//     .transpose()
-//     .view()
-  butterfly(chrysalis.out.transpose())
+//  chrysalis.out
+//    .transpose()
+//    .view()
+// test 2
+
+  butterfly( chrysalis.out.dir
+    .cross(chrysalis.out.list.splitText(by: 1, elem: 3, file: false))
+    .map{ zit -> [ zit[0][1], zit[0][2], zit[1][3].replaceAll(/\s*$/, '') , zit[0][3] ] } )
+
+  aggregate(butterfly.out.last())
 
 }
