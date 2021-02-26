@@ -8,13 +8,13 @@ for f in $(find ${out_dir}/read_partitions -name '*inity.reads.fa') ; do
     Trinity \
       --single ${f} \
       --run_as_paired \
-      --seqType ${seqtype} \
+      --seqType fa \
       --verbose \
       --no_version_check \
       --workdir ${work_dir} \
       --output ${f}.out \
-      --max_memory ${mem} \
-      --CPU ${cpus} \
+      --max_memory 1G \
+      --CPU 1 \
       --trinity_complete \
       --full_cleanup \
       --no_distributed_trinity_exec \
