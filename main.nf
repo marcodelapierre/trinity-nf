@@ -11,9 +11,10 @@ params.reads='reads_{1,2}.fq.gz'
 params.outprefix='./'
 params.procout='trinity_out'
 
+
 process jellyfish {
   tag "${dir}/${name}"
-  stageInMode ( ( workflow.profile == 'zeus' ) ? 'copy' : 'symlink' )
+  stageInMode ( params.copyinput ? 'copy' : 'symlink' )
 
   input:
   tuple val(dir), val(name), path(read1), path(read2)
@@ -166,6 +167,7 @@ process aggregate {
   \${my_trinity}/util/support_scripts/get_Trinity_gene_to_trans_map.pl Trinity.fasta > Trinity.fasta.gene_trans_map
   """
 }
+
 
 
 workflow {
