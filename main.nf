@@ -9,7 +9,7 @@ params.reads='reads_{1,2}.fq.gz'
 
 // internal parameters (typically do not need editing)
 params.outprefix='./'
-params.procout='trinity_out'
+params.procoutdir='trinity_out'
 
 
 process jellyfish {
@@ -20,7 +20,7 @@ process jellyfish {
   tuple val(dir), val(name), path(read1), path(read2)
 
   output:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procout}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
 
   script:
   """
@@ -35,7 +35,7 @@ process jellyfish {
     --no_normalize_reads \
     --verbose \
     --no_version_check \
-    --output ${params.procout} \
+    --output ${params.procoutdir} \
     --max_memory \${mem} \
     --CPU ${task.cpus} \
     --no_run_inchworm
@@ -47,10 +47,10 @@ process inchworm {
   tag "${dir}/${name}"
 
   input:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procout}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
 
   output:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procout}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
 
   script:
   """
@@ -65,7 +65,7 @@ process inchworm {
     --no_normalize_reads \
     --verbose \
     --no_version_check \
-    --output ${params.procout} \
+    --output ${params.procoutdir} \
     --max_memory \${mem} \
     --CPU ${task.cpus} \
     --inchworm_cpu ${task.cpus} \
@@ -79,12 +79,12 @@ process chrysalis {
 //  publishDir "${dir}", mode: 'symlink', saveAs: { filename -> "${params.outprefix}${name}" } // test only
 
   input:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procout}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
 
   output:
-  tuple val("${dir}/${name}"), val(dir), val(name), path("${params.procout}"), emit: dir
+  tuple val("${dir}/${name}"), val(dir), val(name), path("${params.procoutdir}"), emit: dir
   tuple val("${dir}/${name}"), val(dir), val(name), path('fasta_list'), emit: list
-//  tuple val(dir), val(name), path("${params.procout}") // test only
+//  tuple val(dir), val(name), path("${params.procoutdir}") // test only
 
   script:
   """
@@ -99,12 +99,12 @@ process chrysalis {
     --no_normalize_reads \
     --verbose \
     --no_version_check \
-    --output ${params.procout} \
+    --output ${params.procoutdir} \
     --max_memory \${mem} \
     --CPU ${task.cpus} \
     --no_distributed_trinity_exec
 
-  find ${params.procout}/read_partitions -name '*inity.reads.fa' >fasta_list
+  find ${params.procoutdir}/read_partitions -name '*inity.reads.fa' >fasta_list
   """
 }
 
@@ -116,11 +116,11 @@ process butterfly {
   tuple val(dir), val(name), val(read), path(directory)
 
   output:
-  tuple val(dir), val(name), path("${params.procout}")
+  tuple val(dir), val(name), path("${params.procoutdir}")
 
 // this one has been reworded compared to SIH original, and checked against Trinity code
   script:
-// #for f in \$(find ${params.procout}/read_partitions -name '*inity.reads.fa') ; do
+// #for f in \$(find ${params.procoutdir}/read_partitions -name '*inity.reads.fa') ; do
   """
   mem='${task.memory}'
   mem=\${mem%B}
@@ -148,7 +148,7 @@ process aggregate {
   publishDir "${dir}/${params.outprefix}", mode: 'copy', saveAs: { filename -> "${name}_"+filename }
 
   input:
-  tuple val(dir), val(name), path("${params.procout}")
+  tuple val(dir), val(name), path("${params.procoutdir}")
 
   output:
   tuple val(dir), val(name), path("Trinity.fasta"), path("Trinity.fasta.gene_trans_map")
@@ -158,11 +158,11 @@ process aggregate {
   my_trinity=\$(which Trinity)
   my_trinity=\$(dirname \$my_trinity)
 
-  find ${params.procout}/read_partitions/ -name '*inity.fasta' | \
+  find ${params.procoutdir}/read_partitions/ -name '*inity.fasta' | \
     \${my_trinity}/util/support_scripts/partitioned_trinity_aggregator.pl \
-    --token_prefix TRINITY_DN --output_prefix ${params.procout}/Trinity.tmp
+    --token_prefix TRINITY_DN --output_prefix ${params.procoutdir}/Trinity.tmp
 
-  mv ${params.procout}/Trinity.tmp.fasta Trinity.fasta
+  mv ${params.procoutdir}/Trinity.tmp.fasta Trinity.fasta
 
   \${my_trinity}/util/support_scripts/get_Trinity_gene_to_trans_map.pl Trinity.fasta > Trinity.fasta.gene_trans_map
   """
