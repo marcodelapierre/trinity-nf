@@ -8,7 +8,7 @@ DSL2 syntax is used, so that Nextflow version `20.07.1` or higher is recommended
 
 This pipeline is based on [SIH-Raijin-Trinity](https://github.com/Sydney-Informatics-Hub/SIH-Raijin-Trinity):
 
-Jellyfish -> Inchworm -> Chrysalis -> Butterfly mini-assemblies -> Gene-to-Trans
+Jellyfish -> Inchworm -> Chrysalis -> Butterfly mini-assemblies -> Aggregate
 
 The main software requirement is an installation of [Trinity](https://github.com/trinityrnaseq/trinityrnaseq).  
 Tests have been run with Trinity version `2.8.6`.  
