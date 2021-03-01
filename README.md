@@ -36,11 +36,11 @@ The pipeline will output two files prefixed by the sample ID, in this case: `rea
 
 ### Multiple inputs at once
 
-The pipeline allows to feed in multiple datasets at once.  You can use input file name patterns to this end.
+The pipeline allows to feed in multiple datasets at once.  You can use input file name patterns to this end:
 
-1. Multiple input read pairs in the same directory, *e.g.* `sample1_R{1,2}.fq`, `sample2_R{1,2}.fq` and so on, use: `--reads='sample*{1,2}.fq'`.
+1. multiple input read pairs in the same directory, *e.g.* `sample1_R{1,2}.fq`, `sample2_R{1,2}.fq` and so on, use: `--reads='sample*{1,2}.fq'`;
 
-2. Multiple read pairs in distinct directories, *e.g.* `sample1/R{1,2}.fq`, `sample2/R{1,2}.fq` and so on, use: `--reads='sample*/R{1,2}.fq'`
+2. multiple read pairs in distinct directories, *e.g.* `sample1/R{1,2}.fq`, `sample2/R{1,2}.fq` and so on, use: `--reads='sample*/R{1,2}.fq'`.
 
 
 ### Usage on different systems
