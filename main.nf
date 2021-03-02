@@ -76,15 +76,12 @@ process inchworm {
 
 process chrysalis {
   tag "${dir}/${name}"
-//  publishDir "${dir}", mode: 'symlink', saveAs: { filename -> "${params.outprefix}${name}" } // test only
 
   input:
   tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
 
   output:
-  tuple val("${dir}/${name}"), val(dir), val(name), path("${params.procoutdir}/read_partitions"), path("bf_${params.procoutdir}/read_partitions"), emit: dir
-  tuple val("${dir}/${name}"), val(dir), val(name), path('fasta_list'), emit: list
-//  tuple val(dir), val(name), path("${params.procoutdir}") // test only
+  tuple val(dir), val(name), path("${params.procoutdir}/read_partitions/**inity.reads.fa")
 
   script:
   """
@@ -103,43 +100,41 @@ process chrysalis {
     --max_memory \${mem} \
     --CPU ${task.cpus} \
     --no_distributed_trinity_exec
-
-  find ${params.procoutdir}/read_partitions -name '*inity.reads.fa' >fasta_list
-  find ${params.procoutdir}/read_partitions -type d -exec mkdir -p bf_{} \\;
   """
 }
 
 
 process butterfly {
-  tag "${dir}/${name}/${read}"
+  tag "${dir}/${name}"
 
   input:
-  tuple val(dir), val(name), val(read), path("${params.procoutdir}/read_partitions"), path("bf_${params.procoutdir}/read_partitions")
+  tuple val(dir), val(name), path(reads_fa)
 
   output:
-  tuple val(dir), val(name), path("bf_${params.procoutdir}/read_partitions")
+  tuple val(dir), val(name), path("*inity.fasta") optional true
 
 // this one has been reworded compared to SIH original, and checked against Trinity code
   script:
-// #for f in \$(find ${params.procoutdir}/read_partitions -name '*inity.reads.fa') ; do
   """
   mem='${task.memory}'
   mem=\${mem%B}
   mem=\${mem// /}
 
-  Trinity \
-    --single $read \
-    --run_as_paired \
-    --seqType fa \
-    --verbose \
-    --no_version_check \
-    --workdir trinity_workdir \
-    --output bf_${read}.out \
-    --max_memory \${mem} \
-    --CPU ${task.cpus} \
-    --trinity_complete \
-    --full_cleanup \
-    --no_distributed_trinity_exec
+  for read_fa in ${reads_fa} ; do
+    Trinity \
+      --single \${read_fa} \
+      --run_as_paired \
+      --seqType fa \
+      --verbose \
+      --no_version_check \
+      --workdir trinity_workdir \
+      --output \${read_fa}.out \
+      --max_memory \${mem} \
+      --CPU ${task.cpus} \
+      --trinity_complete \
+      --full_cleanup \
+      --no_distributed_trinity_exec
+  done
   """
 }
 
@@ -149,7 +144,7 @@ process aggregate {
   publishDir "${dir}/${params.outprefix}", mode: 'copy', saveAs: { filename -> "${name}_"+filename }
 
   input:
-  tuple val(dir), val(name), path("bf_${params.procoutdir}/read_partitions")
+  tuple val(dir), val(name), path(reads_fasta)
 
   output:
   tuple val(dir), val(name), path("Trinity.fasta"), path("Trinity.fasta.gene_trans_map")
@@ -159,7 +154,7 @@ process aggregate {
   my_trinity=\$(which Trinity)
   my_trinity=\$(dirname \$my_trinity)
 
-  find bf_${params.procoutdir}/read_partitions/ -name '*inity.fasta' | \
+  ls ${reads_fasta} | \
     \${my_trinity}/util/support_scripts/partitioned_trinity_aggregator.pl \
     --token_prefix TRINITY_DN --output_prefix Trinity.tmp
 
@@ -183,16 +178,17 @@ workflow {
   inchworm(jellyfish.out)
 
   chrysalis(inchworm.out)
-// test 1
+// test
 //  chrysalis.out
 //    .transpose()
 //    .view()
-// test 2
 
-  butterfly( chrysalis.out.dir
-    .cross(chrysalis.out.list.splitText(by: 1, elem: 3, file: false))
-    .map{ zit -> [ zit[0][1], zit[0][2], zit[1][3].replaceAll(/\s*$/, '') , zit[0][3] , zit[0][4] ] } )
+  butterfly(chrysalis.out.transpose())
+// test
+//  butterfly.out
+//    .groupTuple(by: [0,1])
+//    .view()
 
-  aggregate(butterfly.out.last())
+  aggregate(butterfly.out.groupTuple(by: [0,1]))
 
 }
