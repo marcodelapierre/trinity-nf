@@ -116,25 +116,28 @@ process butterfly {
 // this one has been reworded compared to SIH original, and checked against Trinity code
   script:
   """
-  mem='${task.memory}'
+  mem='${params.bf_mem}'
   mem=\${mem%B}
-  mem=\${mem// /}
+  export mem=\${mem// /}
 
-  for read_fa in ${reads_fa} ; do
-    Trinity \
-      --single \${read_fa} \
-      --run_as_paired \
-      --seqType fa \
-      --verbose \
-      --no_version_check \
-      --workdir trinity_workdir \
-      --output \${read_fa}.out \
-      --max_memory \${mem} \
-      --CPU ${task.cpus} \
-      --trinity_complete \
-      --full_cleanup \
-      --no_distributed_trinity_exec
-  done
+  cat << "EOF" >trinity.sh
+Trinity \
+  --single \${1} \
+  --run_as_paired \
+  --seqType fa \
+  --verbose \
+  --no_version_check \
+  --workdir trinity_workdir \
+  --output \${1}.out \
+  --max_memory \${mem} \
+  --CPU ${params.bf_cpus} \
+  --trinity_complete \
+  --full_cleanup \
+  --no_distributed_trinity_exec
+EOF
+  chmod +x trinity.sh
+
+  ls ${reads_fa} | parallel -j ${task.cpus} ./trinity.sh {}
   """
 }
 
@@ -172,23 +175,21 @@ workflow {
   read_ch = channel.fromFilePairs( params.reads )
                    .map{ it -> [ it[1][0].parent, it[0], it[1][0], it[1][1] ] }
 
+//
 // tasks
+//
   jellyfish(read_ch)
 
   inchworm(jellyfish.out)
 
   chrysalis(inchworm.out)
-// test
-//  chrysalis.out
-//    .transpose()
-//    .view()
 
-  butterfly(chrysalis.out.transpose())
-// test
-//  butterfly.out
-//    .groupTuple(by: [0,1])
-//    .view()
+  butterfly( chrysalis.out
+    .map{ zit -> [ zit[0], zit[1], zit[2].collate( params.bf_collate ) ] }
+    .transpose() )
 
-  aggregate(butterfly.out.groupTuple(by: [0,1]))
+  aggregate( butterfly.out
+    .groupTuple(by: [0,1])
+    .map{ yit -> [ yit[0], yit[1], yit[2].flatten() ] } )
 
 }

@@ -10,8 +10,9 @@ This pipeline is based on [SIH-Raijin-Trinity](https://github.com/Sydney-Informa
 
 Jellyfish -> Inchworm -> Chrysalis -> Butterfly mini-assemblies -> Aggregate
 
-The main software requirement is an installation of [Trinity](https://github.com/trinityrnaseq/trinityrnaseq).  
-Tests have been run with Trinity version `2.8.6`.  
+There are two software requirements: 
+- [Trinity](https://github.com/trinityrnaseq/trinityrnaseq), the main bioinformatics package;  tests have been run with Trinity version `2.8.6`;
+- [GNU Parallel](https://www.gnu.org/software/parallel), to orchestrate mini-assemblies within each compute node;  version `20191022` has been tested.
 
 
 ### Basic usage
