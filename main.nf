@@ -132,7 +132,7 @@ process butterfly {
   tuple val(dir), val(name), path(reads_fa)
 
   output:
-  tuple val(dir), val(name), path{ params.localdisk ? "out_${reads_fa}" : "*inity.fasta" } optional true
+  tuple val(dir), val(name), path{ params.localdisk ? "out_${reads_fa}" : "*inity.fasta" }, optional: true
 
 // this one has been reworded compared to SIH original, and checked against Trinity code
   script:
