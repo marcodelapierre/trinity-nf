@@ -44,13 +44,18 @@ The pipeline allows to feed in multiple datasets at once.  You can use input fil
 2. multiple read pairs in distinct directories, *e.g.* `sample1/R{1,2}.fq`, `sample2/R{1,2}.fq` and so on, use: `--reads='sample*/R{1,2}.fq'`.
 
 
+### Major options
+
+The pipeline can be used with the parameter `--localdisk`, to enable executing I/O intensive processes in node-local disks;  a configuration parameter allows to define the naming convention for the corresponding node-local scratch directories.
+
+
 ### Usage on different systems
 
 The main pipeline file, `main.nf`, contains the pipeline logic and its almost completely machine independent.  
 All system specific information is contained in configuration files under the `config` directory, whose information is included in `nextflow.config`.  
 
 Examples are provided for Zeus and Nimbus at Pawsey;  you can use them as templates for other systems.  
-Typical information to be specified includes scheduler configuration, software availability (containers, conda, modules, ..), and eventually other specificities such as location of the work directory for runtime and filesystem options (*e.g.* set cache mode to *lenient* when using parallel filesystems).  
+Typical information to be specified includes scheduler configuration, software availability (containers, conda, modules, ..), and eventually other specificities such as location of the work directory for runtime, filesystem options (*e.g.* set cache mode to *lenient* when using parallel filesystems), pipeline configurations (*e.g.* local directory naming for *localdisk*).  
 
 
 ### Additional resources
