@@ -202,15 +202,13 @@ process aggregate {
       cp \$( readlink \$here/\$f ) .
       tar xzf \${f}
     done
-    find ${params.procoutdir}/read_partitions -name "*inity.fasta" | \
-      \${my_trinity}/util/support_scripts/partitioned_trinity_aggregator.pl \
-      --token_prefix TRINITY_DN --output_prefix Trinity.tmp
+    find ${params.procoutdir}/read_partitions -name "*inity.fasta" >input_list
   else
-    ls ${reads_fasta} | \
-      \${my_trinity}/util/support_scripts/partitioned_trinity_aggregator.pl \
-      --token_prefix TRINITY_DN --output_prefix Trinity.tmp
+    ls ${reads_fasta} >input_list
   fi
 
+  cat input_list | \${my_trinity}/util/support_scripts/partitioned_trinity_aggregator.pl \
+    --token_prefix TRINITY_DN --output_prefix Trinity.tmp
   mv Trinity.tmp.fasta Trinity.fasta
 
   \${my_trinity}/util/support_scripts/get_Trinity_gene_to_trans_map.pl Trinity.fasta > Trinity.fasta.gene_trans_map
