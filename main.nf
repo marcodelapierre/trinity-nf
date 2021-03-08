@@ -15,7 +15,7 @@ params.procoutdir='trinity_out'
 
 process jellyfish {
   tag "${dir}/${name}"
-  stageInMode ( params.copyinput ? 'copy' : 'symlink' )
+  stageInMode { params.copyinput ? 'copy' : 'symlink' }
 
   input:
   tuple val(dir), val(name), path(read1), path(read2)
