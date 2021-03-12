@@ -9,7 +9,7 @@ params.reads = 'reads_{1,2}.fq.gz'
 
 // internal parameters (typically do not need editing)
 params.outprefix = './'
-params.procoutdir = 'trinity_out'
+params.taskoutdir = 'trinity_out'
 //
 params.overoutdirprefix = 'overlays_'
 params.overfileprefix = 'overlay_'
@@ -50,9 +50,10 @@ process overlay_many {
   tuple val(dir), val(name), path(reads_fa)
 
   output:
-  tuple val(dir), val(name), path(reads_fa), path("${params.overfileprefix}${reads_fa.toString().minus('.tgz')}")
+  tuple val(dir), val(name), val(label_fa), path("${params.overfileprefix}${label_fa}")
 
   script:
+  label_fa = file(reads_fa).getSimpleName()
   """
   singularity exec docker://ubuntu:18.04 bash -c ' \
   out_file=\"${params.overfileprefix}${reads_fa.toString().minus('.tgz')}\" && \
@@ -73,7 +74,7 @@ process jellyfish {
   tuple val(dir), val(name), path(read1), path(read2), path("${params.overtaskfile}")
 
   output:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}"), path("${params.overtaskfile}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.taskoutdir}"), path("${params.overtaskfile}")
 
   script:
   """
@@ -88,7 +89,7 @@ process jellyfish {
     --no_normalize_reads \
     --verbose \
     --no_version_check \
-    --output ${params.procoutdir} \
+    --output ${params.taskoutdir} \
     --max_memory \${mem} \
     --CPU ${task.cpus} \
     --no_run_inchworm
@@ -100,10 +101,10 @@ process inchworm {
   tag "${dir}/${name}"
 
   input:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}"), path("${params.overtaskfile}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.taskoutdir}"), path("${params.overtaskfile}")
 
   output:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}"), path("${params.overtaskfile}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.taskoutdir}"), path("${params.overtaskfile}")
 
   script:
   """
@@ -118,7 +119,7 @@ process inchworm {
     --no_normalize_reads \
     --verbose \
     --no_version_check \
-    --output ${params.procoutdir} \
+    --output ${params.taskoutdir} \
     --max_memory \${mem} \
     --CPU ${task.cpus} \
     --inchworm_cpu ${task.cpus} \
@@ -131,10 +132,10 @@ process chrysalis {
   tag "${dir}/${name}"
 
   input:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}"), path("${params.overtaskfile}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.taskoutdir}"), path("${params.overtaskfile}")
 
   output:
-  tuple val(dir), val(name), path{ params.localdisk ? "chunk*.tgz" : "${params.procoutdir}/read_partitions/**inity.reads.fa" }
+  tuple val(dir), val(name), path{ params.localdisk ? "chunk*.tgz" : "${params.taskoutdir}/read_partitions/**inity.reads.fa" }
 
   script:
   """
@@ -143,7 +144,7 @@ process chrysalis {
     mkdir -p ${params.localdir}
     cp -r \$( readlink $read1 ) ${params.localdir}/
     cp -r \$( readlink $read2 ) ${params.localdir}/
-    cp -r \$( readlink ${params.procoutdir} ) ${params.localdir}/
+    cp -r \$( readlink ${params.taskoutdir} ) ${params.localdir}/
     cd ${params.localdir}
   fi
 
@@ -158,13 +159,13 @@ process chrysalis {
     --no_normalize_reads \
     --verbose \
     --no_version_check \
-    --output ${params.procoutdir} \
+    --output ${params.taskoutdir} \
     --max_memory \${mem} \
     --CPU ${task.cpus} \
     --no_distributed_trinity_exec
 
   if [ "${params.localdisk}" == "true" ] ; then
-    find ${params.procoutdir}/read_partitions -name "*inity.reads.fa" >output_list
+    find ${params.taskoutdir}/read_partitions -name "*inity.reads.fa" >output_list
     split -l ${params.bf_collate} -a 4 output_list chunk
     for f in chunk* ; do
       tar -cz -h -f \${f}.tgz -T \${f}
@@ -181,7 +182,7 @@ process butterfly {
   tag "${dir}/${name}"
 
   input:
-  tuple val(dir), val(name), path(reads_fa)
+  tuple val(dir), val(name), path(reads_fa), path("${params.overtaskfile}")
 
   output:
   tuple val(dir), val(name), path{ params.localdisk ? "out_${reads_fa}" : "*inity.fasta" }, optional: true
@@ -219,8 +220,8 @@ EOF
 
   if [ "${params.localdisk}" == "true" ] ; then
     tar xzf ${reads_fa}
-    find ${params.procoutdir}/read_partitions -name "*inity.reads.fa" | parallel -j ${task.cpus} ./trinity.sh {}
-    find ${params.procoutdir}/read_partitions -name "*inity.fasta" | tar -cz -h -f out_${reads_fa} -T -
+    find ${params.taskoutdir}/read_partitions -name "*inity.reads.fa" | parallel -j ${task.cpus} ./trinity.sh {}
+    find ${params.taskoutdir}/read_partitions -name "*inity.fasta" | tar -cz -h -f out_${reads_fa} -T -
     cd \$here
     cp ${params.localdir}/out_chunk*.tgz .
     rm -r ${params.localdir}
@@ -254,7 +255,7 @@ process aggregate {
       cp \$( readlink \$here/\$f ) .
       tar xzf \${f}
     done
-    find ${params.procoutdir}/read_partitions -name "*inity.fasta" >input_list
+    find ${params.taskoutdir}/read_partitions -name "*inity.fasta" >input_list
   else
     ls ${reads_fasta} >input_list
   fi
@@ -280,13 +281,12 @@ workflow {
 // inputs
   if ( params.overlay ) {
     read_ch = channel.fromFilePairs( params.reads )
-                     .map{ it -> [ it[1][0].parent, it[0], it[1][0], it[1][1] ] }
-    
+                .map{ it -> [ it[1][0].parent, it[0], it[1][0], it[1][1] ] }
   } else {
     dummy_ov = file('dummy_overlay')
     dummy_ov.text = 'dummy_overlay\n'
     read_ch = channel.fromFilePairs( params.reads )
-                     .map{ it -> [ it[1][0].parent, it[0], it[1][0], it[1][1], dummy_ov ] }
+                .map{ it -> [ it[1][0].parent, it[0], it[1][0], it[1][1], dummy_ov ] }
   }
 
 //
@@ -298,29 +298,37 @@ workflow {
   } else {
     jellyfish(read_ch)
   }
+
   inchworm(jellyfish.out)
+
   chrysalis(inchworm.out)
 
   if ( params.overlay ) {
-    overlay_many(chrysalis.out.transpose() )
+    overlay_many( chrysalis.out.transpose() )
+    butterfly( chrysalis.out
+      .transpose().map{ xit -> [ xit[0], xit[1], file(xit[2]).getSimpleName(), xit[2] ] }
+      .join(overlay_many.out, by: [0,1,2])
+      .map{ wit -> [ wit[0], wit[1], wit[3], wit[4] ] } )
+  } else if ( params.localdisk ) {
+    butterfly( chrysalis.out
+      .transpose()
+      .map{ xit -> ( xit << dummy_ov) } )
+  } else {
+    butterfly( chrysalis.out
+      .map{ zit -> [ zit[0], zit[1], zit[2].collate( params.bf_collate ) ] }
+      .transpose()
+      .map{ xit -> ( xit << dummy_ov) } )
   }
 
-  // if ( params.localdisk ) {
-  //   butterfly( chrysalis.out.transpose() )
-  // } else {
-  //   butterfly( chrysalis.out
-  //     .map{ zit -> [ zit[0], zit[1], zit[2].collate( params.bf_collate ) ] }
-  //     .transpose() )
-  // }
+  if ( params.overlay ) {
+    aggregate( butterfly.out
+      .groupTuple(by: [0,1])
+      .map{ yit -> [ yit[0], yit[1], yit[2].flatten() ] }
+      .join(overlay_one.out, by: [0,1]) )
+  } else {
+    aggregate( butterfly.out
+      .groupTuple(by: [0,1])
+      .map{ yit -> [ yit[0], yit[1], yit[2].flatten(), dummy_ov ] } )
+  }
 
-  // if ( params.overlay ) {
-  //   aggregate( butterfly.out
-  //     .groupTuple(by: [0,1])
-  //     .map{ yit -> [ yit[0], yit[1], yit[2].flatten() ] }
-  //     .join(overlay_one.out, by: [0,1]) )
-  // } else {
-  //   aggregate( butterfly.out
-  //     .groupTuple(by: [0,1])
-  //     .map{ yit -> [ yit[0], yit[1], yit[2].flatten(), dummy_ov ] } )
-  // }
 }
