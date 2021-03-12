@@ -4,13 +4,65 @@ nextflow.enable.dsl=2
 
 
 // params user should modify at runtime
-params.reads='reads_{1,2}.fq.gz'
-params.localdisk = false
+params.reads = 'reads_{1,2}.fq.gz'
 
 
 // internal parameters (typically do not need editing)
-params.outprefix='./'
-params.procoutdir='trinity_out'
+params.outprefix = './'
+params.procoutdir = 'trinity_out'
+//
+params.overoutdirprefix = 'overlays_'
+params.overfileprefix = 'overlay_'
+
+
+process overlay_one {
+  tag "${dir}/${name}"
+  storeDir "${dir}/${params.overoutdirprefix}${name}"
+
+  container ''
+
+  input:
+  tuple val(dir), val(name), path(read1), path(read2)
+
+  output:
+  tuple val(dir), val(name), path("${params.overfileprefix}one")
+
+  script:
+  """
+  singularity exec docker://ubuntu:18.04 bash -c ' \
+  out_file=\"${params.overfileprefix}one\" && \
+  mkdir -p overlay_tmp/upper overlay_tmp/work && \
+  dd if=/dev/zero of=\${out_file} count=${params.overlay_size_mb} bs=1M && \
+  mkfs.ext3 -d overlay_tmp \${out_file} && \
+  rm -rf overlay_tmp \
+  '
+  """
+}
+
+
+process overlay_many {
+  tag "${dir}/${name}"
+  storeDir "${dir}/${params.overoutdirprefix}${name}"
+
+  container ''
+
+  input:
+  tuple val(dir), val(name), path(reads_fa)
+
+  output:
+  tuple val(dir), val(name), path(reads_fa), path("${params.overfileprefix}${reads_fa.toString().minus('.tgz')}")
+
+  script:
+  """
+  singularity exec docker://ubuntu:18.04 bash -c ' \
+  out_file=\"${params.overfileprefix}${reads_fa.toString().minus('.tgz')}\" && \
+  mkdir -p overlay_tmp/upper overlay_tmp/work && \
+  dd if=/dev/zero of=\${out_file} count=${params.overlay_size_mb} bs=1M && \
+  mkfs.ext3 -d overlay_tmp \${out_file} && \
+  rm -rf overlay_tmp \
+  '
+  """
+}
 
 
 process jellyfish {
@@ -18,10 +70,10 @@ process jellyfish {
   stageInMode { params.copyinput ? 'copy' : 'symlink' }
 
   input:
-  tuple val(dir), val(name), path(read1), path(read2)
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.overtaskfile}")
 
   output:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}"), path("${params.overtaskfile}")
 
   script:
   """
@@ -48,10 +100,10 @@ process inchworm {
   tag "${dir}/${name}"
 
   input:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}"), path("${params.overtaskfile}")
 
   output:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}"), path("${params.overtaskfile}")
 
   script:
   """
@@ -79,7 +131,7 @@ process chrysalis {
   tag "${dir}/${name}"
 
   input:
-  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}")
+  tuple val(dir), val(name), path(read1), path(read2), path("${params.procoutdir}"), path("${params.overtaskfile}")
 
   output:
   tuple val(dir), val(name), path{ params.localdisk ? "chunk*.tgz" : "${params.procoutdir}/read_partitions/**inity.reads.fa" }
@@ -184,7 +236,7 @@ process aggregate {
   publishDir "${dir}/${params.outprefix}", mode: 'copy', saveAs: { filename -> "${name}_"+filename }
 
   input:
-  tuple val(dir), val(name), path(reads_fasta)
+  tuple val(dir), val(name), path(reads_fasta), path("${params.overtaskfile}")
 
   output:
   tuple val(dir), val(name), path("Trinity.fasta"), path("Trinity.fasta.gene_trans_map")
@@ -226,28 +278,49 @@ process aggregate {
 workflow {
 
 // inputs
-  read_ch = channel.fromFilePairs( params.reads )
-                   .map{ it -> [ it[1][0].parent, it[0], it[1][0], it[1][1] ] }
+  if ( params.overlay ) {
+    read_ch = channel.fromFilePairs( params.reads )
+                     .map{ it -> [ it[1][0].parent, it[0], it[1][0], it[1][1] ] }
+    
+  } else {
+    dummy_ov = file('dummy_overlay')
+    dummy_ov.text = 'dummy_overlay\n'
+    read_ch = channel.fromFilePairs( params.reads )
+                     .map{ it -> [ it[1][0].parent, it[0], it[1][0], it[1][1], dummy_ov ] }
+  }
 
 //
 // tasks
 //
-  jellyfish(read_ch)
-
+  if ( params.overlay ) {
+    overlay_one(read_ch)
+    jellyfish( read_ch.join(overlay_one.out, by: [0,1]) )
+  } else {
+    jellyfish(read_ch)
+  }
   inchworm(jellyfish.out)
-
   chrysalis(inchworm.out)
 
-  if ( params.localdisk ) {
-    butterfly( chrysalis.out.transpose() )
-  } else {
-    butterfly( chrysalis.out
-      .map{ zit -> [ zit[0], zit[1], zit[2].collate( params.bf_collate ) ] }
-      .transpose() )
+  if ( params.overlay ) {
+    overlay_many(chrysalis.out.transpose() )
   }
 
-  aggregate( butterfly.out
-    .groupTuple(by: [0,1])
-    .map{ yit -> [ yit[0], yit[1], yit[2].flatten() ] } )
+  // if ( params.localdisk ) {
+  //   butterfly( chrysalis.out.transpose() )
+  // } else {
+  //   butterfly( chrysalis.out
+  //     .map{ zit -> [ zit[0], zit[1], zit[2].collate( params.bf_collate ) ] }
+  //     .transpose() )
+  // }
 
+  // if ( params.overlay ) {
+  //   aggregate( butterfly.out
+  //     .groupTuple(by: [0,1])
+  //     .map{ yit -> [ yit[0], yit[1], yit[2].flatten() ] }
+  //     .join(overlay_one.out, by: [0,1]) )
+  // } else {
+  //   aggregate( butterfly.out
+  //     .groupTuple(by: [0,1])
+  //     .map{ yit -> [ yit[0], yit[1], yit[2].flatten(), dummy_ov ] } )
+  // }
 }
