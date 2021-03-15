@@ -15,6 +15,7 @@
 
 
 # Ensure nextflow is in the PATH
+module load java/jdk-8.40
 export PATH=$PATH:<path/to/nextflow>
 
 nextflow run main.nf \
