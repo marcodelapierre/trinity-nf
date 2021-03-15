@@ -20,7 +20,7 @@ There are two software requirements:
 ```
 nextflow run marcodelapierre/trinity-nf \
   --reads='reads_{1,2}.fq.gz' \
-  -profile zeus --slurm_account='pawsey0001'
+  -profile zeus --slurm_account='<Your Pawsey Project>'
 ```
 
 The flag `--reads` is required to specify the name of the pair of input read files.  
