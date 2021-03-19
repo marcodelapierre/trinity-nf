@@ -21,4 +21,4 @@ export PATH=$PATH:<path/to/nextflow>
 nextflow run main.nf \
   --reads='reads_{1,2}.fq.gz' \
   -profile test_gadi \
-  -name nxf-${PBS_JOBID}
+  -name nxf-${PBS_JOBID%.*}
