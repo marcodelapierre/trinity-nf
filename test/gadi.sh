@@ -2,7 +2,7 @@
 
 #PBS -N nxf-small
 #PBS -P <NCI project>
-#PBS -q normal
+#PBS -q espress
 #PBS -l ncpus=1
 #PBS -l mem=8GB
 #PBS -l walltime=10:00
