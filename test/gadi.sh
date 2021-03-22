@@ -16,7 +16,8 @@
 
 # Ensure nextflow is in the PATH
 module load java/jdk-8.40
-export PATH=$PATH:<path/to/nextflow>
+NEXTFLOW_BIN_PATH=""  #path to nextflow executable here
+export PATH=$PATH:$NEXTFLOW_BIN_PATH
 
 nextflow run main.nf \
   --reads='reads_{1,2}.fq.gz' \

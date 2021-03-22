@@ -11,7 +11,7 @@ This pipeline is based on [SIH-Raijin-Trinity](https://github.com/Sydney-Informa
 Jellyfish -> Inchworm -> Chrysalis -> Butterfly mini-assemblies -> Aggregate
 
 There are two software requirements: 
-- [Trinity](https://github.com/trinityrnaseq/trinityrnaseq), the main bioinformatics package;  tests have been run with Trinity version `2.8.6`;
+- [Trinity](https://github.com/trinityrnaseq/trinityrnaseq), the main bioinformatics package;  tests have been run with Trinity version `2.8.6` (official container);
 - [GNU Parallel](https://www.gnu.org/software/parallel), to orchestrate mini-assemblies within each compute node;  version `20191022` has been tested.
 
 
@@ -30,7 +30,7 @@ Note some syntax requirements:
 - use curly brackets to specify the wild character within the file pair, *e.g.* `{1,2}`;
 - the prefix to the wild character serves as the sample ID, *e.g.* `reads_`.
 
-The flag `-profile` (note the single dash) allows to select the appropriate profile for the machine in use, Zeus in this case.  On Zeus, use the flag `--slurm_account` to set your Pawsey account.
+The flag `-profile` (note the single dash) allows to select the appropriate profile for the machine in use, Zeus in this case.  On Zeus, use the flag `--slurm_account` to set your Pawsey account;  on Gadi, use the flag `--pbs_account` instead.
 
 The pipeline will output two files prefixed by the sample ID, in this case: `reads_Trinity.fasta` and `reads_Trinity.fasta.gene_trans_map`.  By default, they are saved in the same directory as the input read files.
 
@@ -56,7 +56,7 @@ In alternative, the pipeline can be used with the additional profile `overlay`, 
 The main pipeline file, `main.nf`, contains the pipeline logic and its almost completely machine independent.  
 All system specific information is contained in configuration files under the `config` directory, whose information is included in `nextflow.config`.  
 
-Examples are provided for Zeus and Nimbus at Pawsey;  you can use them as templates for other systems.  
+Examples are provided for Zeus and Nimbus at Pawsey, and Gadi at NCI;  you can use them as templates for other systems.  
 Typical information to be specified includes scheduler configuration, software availability (containers, conda, modules, ..), and eventually other specificities such as location of the work directory for runtime, filesystem options (*e.g.* set cache mode to *lenient* when using parallel filesystems), pipeline configurations (*e.g.* local directory naming for *localdisk*, size of *overlay* files).  
 
 
@@ -64,4 +64,4 @@ Typical information to be specified includes scheduler configuration, software a
 
 The `extra` directory contains an example Slurm script, `job.sh`, to run on Zeus.  There is also a sample script `log.sh` that takes a run name as input and displays formatted runtime information.
 
-The `test` directory contains a small input dataset and a launching script for quick testing of the pipeline, with total runtime of a few minutes.
+The `test` directory contains a small input dataset and launching scripts for quick testing of the pipeline (both for Zeus and Gadi), with total runtime of a few minutes.
