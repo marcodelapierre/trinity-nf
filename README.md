@@ -30,7 +30,7 @@ Note some syntax requirements:
 - use curly brackets to specify the wild character within the file pair, *e.g.* `{1,2}`;
 - the prefix to the wild character serves as the sample ID, *e.g.* `reads_`.
 
-The flag `-profile` (note the single dash) allows to select the appropriate profile for the machine in use, Zeus in this case.  On Zeus, use the flag `--slurm_account` to set your Pawsey account;  on Gadi, use the flag `--pbs_account` instead.
+The flag `-profile` (note the single dash) allows to select the appropriate profile for the machine in use, Zeus in this case.  On Zeus, use the flag `--slurm_account` to set your Pawsey account;  on Gadi (NCI), use the flag `--pbs_account` instead.
 
 The pipeline will output two files prefixed by the sample ID, in this case: `reads_Trinity.fasta` and `reads_Trinity.fasta.gene_trans_map`.  By default, they are saved in the same directory as the input read files.
 
@@ -49,6 +49,8 @@ The pipeline allows to feed in multiple datasets at once.  You can use input fil
 The pipeline can be used with the additional profile `localdisk`, for instance `-profile zeus,localdisk`, to enable executing I/O intensive processes in node-local disks;  a configuration parameter allows to define the naming convention for the corresponding node-local scratch directories.
 
 In alternative, the pipeline can be used with the additional profile `overlay`, as in `-profile zeus,overlay`, to enable execution inside an overlayFS (virtual filesystem in a file) and mitigate I/O intensive analyses.  This option requires the use of Singularity.  A configuration parameter allows to define the size for the overlay files (one file per concurrent task).
+
+In the case of Gadi at NCI, you can use `-profile gadi,localdisk` to enable executing I/O intensive processes in node-local disks (JOBFS).  The default Gadi profile makes use of environment modules to provide the required packages;  to switch to a Singularity container instead, use the flag `-profile gadi,singularity`.
 
 
 ### Usage on different systems
