@@ -226,7 +226,7 @@ EOF
     cp ${params.localdir}/out_chunk*.tgz .
     rm -r ${params.localdir}
   else
-    ls ${reads_fa} | parallel -j ${task.cpus} ./trinity.sh {}
+    ls *inity.reads.fa | parallel -j ${task.cpus} ./trinity.sh {}
   fi
   """
 }
@@ -257,7 +257,7 @@ process aggregate {
     done
     find ${params.taskoutdir}/read_partitions -name "*inity.fasta" >input_list
   else
-    ls ${reads_fasta} >input_list
+    ls *inity.fasta >input_list
   fi
 
   cat input_list | \${my_trinity}/util/support_scripts/partitioned_trinity_aggregator.pl \
