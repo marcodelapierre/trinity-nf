@@ -1,7 +1,14 @@
 ## Trinity assembly pipeline from USydney Informatics Hub
-  
+
 The pipeline requires [Nextflow](https://github.com/nextflow-io/nextflow) to run.
 DSL2 syntax is used, so that Nextflow version `20.07.1` or higher is required.
+
+**NOTE**: the scope of this project was to port an existing bash pipeline into Nextflow, and in doing so investigating a few points, namely:
+* possibility of integrating an option to leverage node-local disks;
+* possibility of integrating an option to leverage overlayFS in Singularity;
+* ease of adding configuration files for more computing clusters (Gadi was tested in this case).
+
+The porting was a successful case study for all of these aspects.
 
 
 ### Pipeline and requirements
