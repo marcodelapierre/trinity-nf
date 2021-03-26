@@ -7,14 +7,20 @@
 #PBS -l mem=8GB
 #PBS -l walltime=10:00
 
-### probably not needed as this is the default behaviour in Gadi, let us see
+### this is for when nextflow is on gdata
+#PBS -l storage=gdata/wz54
+
+### this is needed only when using test_gadi,localdisk
+###PBS -l jobfs=1GB
+
+### not needed as this is the default behaviour in Gadi
 ###PBS -l storage=scratch/wz54
 
 #PBS -l wd
 #PBS -W umask=022
 
 
-# Ensure nextflow is in the PATH
+# setup environment for nextflow
 module load java/jdk-8.40
 NEXTFLOW_BIN_PATH=""  #path to nextflow executable here
 export PATH=$PATH:$NEXTFLOW_BIN_PATH
