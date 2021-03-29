@@ -27,5 +27,6 @@ export PATH=$PATH:$NEXTFLOW_BIN_PATH
 
 nextflow run main.nf \
   --reads='reads_{1,2}.fq.gz' \
+  --whoami=$USER \
   -profile test_gadi \
   -name nxf-${PBS_JOBID%.*}
