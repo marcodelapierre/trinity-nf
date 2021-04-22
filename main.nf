@@ -141,7 +141,8 @@ process chrysalis {
   """
   if [ "${params.localdisk}" == "true" ] ; then
     here=\$PWD
-    mkdir -p ${params.localdir}
+    rm -rf ${params.localdir}
+    mkdir ${params.localdir}
     cp -r \$( readlink $read1 ) ${params.localdir}/
     cp -r \$( readlink $read2 ) ${params.localdir}/
     cp -r \$( readlink ${params.taskoutdir} ) ${params.localdir}/
@@ -192,7 +193,8 @@ process butterfly {
   """
   if [ "${params.localdisk}" == "true" ] ; then
     here=\$PWD
-    mkdir -p ${params.localdir}
+    rm -rf ${params.localdir}
+    mkdir ${params.localdir}
     cp -r \$( readlink $reads_fa ) ${params.localdir}/
     cd ${params.localdir}
   fi
@@ -249,7 +251,8 @@ process aggregate {
 
   if [ "${params.localdisk}" == "true" ] ; then
     here=\$PWD
-    mkdir -p ${params.localdir}
+    rm -rf ${params.localdir}
+    mkdir ${params.localdir}
     cd ${params.localdir}
     for f in ${reads_fasta} ; do
       cp \$( readlink \$here/\$f ) .
