@@ -32,7 +32,7 @@ process overlay_one {
   singularity exec docker://ubuntu:18.04 bash -c ' \
   out_file=\"${params.overfileprefix}one\" && \
   mkdir -p overlay_tmp/upper overlay_tmp/work && \
-  dd if=/dev/zero of=\${out_file} count=${params.overlay_size_mb} bs=1M && \
+  dd if=/dev/zero of=\${out_file} count=${params.overlay_size_mb_one} bs=1M && \
   mkfs.ext3 -d overlay_tmp \${out_file} && \
   rm -rf overlay_tmp \
   '
@@ -58,7 +58,7 @@ process overlay_many {
   singularity exec docker://ubuntu:18.04 bash -c ' \
   out_file=\"${params.overfileprefix}${reads_fa.toString().minus('.tgz')}\" && \
   mkdir -p overlay_tmp/upper overlay_tmp/work && \
-  dd if=/dev/zero of=\${out_file} count=${params.overlay_size_mb} bs=1M && \
+  dd if=/dev/zero of=\${out_file} count=${params.overlay_size_mb_many} bs=1M && \
   mkfs.ext3 -d overlay_tmp \${out_file} && \
   rm -rf overlay_tmp \
   '
