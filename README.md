@@ -4,16 +4,17 @@ The pipeline requires [Nextflow](https://github.com/nextflow-io/nextflow) to run
 DSL2 syntax is used, so that Nextflow version `20.07.1` or higher is required.
 
 **NOTE**: this project was run in the context of targeting workflow automation, reproducibility and scalability.  The scope was to port an existing bash pipeline into Nextflow, and in doing so investigating a few points, namely:
-* possibility of integrating an option to leverage node-local disks;
-* possibility of integrating an option to leverage overlayFS in Singularity;
+* packing of multiple serial analyses into a single process;
+* option to leverage node-local disks;
+* option to leverage overlayFS in Singularity;
 * ease of adding configuration files for more computing clusters (Gadi was tested in this case).
 
-The first two tackle scalability, in that they allow to process large input datasets;  the third one is clearly about portability.  The porting was a successful case study for all of these aspects.
+The first three items tackle scalability, in that they allow to process large input datasets;  the fourth one is clearly about portability.  
 
 
 ### Pipeline and requirements
 
-This pipeline is based on [SIH-Raijin-Trinity](https://github.com/Sydney-Informatics-Hub/SIH-Raijin-Trinity):
+This pipeline is based on [SIH-Raijin-Trinity](https://github.com/Sydney-Informatics-Hub/SIH-Raijin-Trinity), with scheduler parameters updated following [Gadi-Trinity](https://github.com/Sydney-Informatics-Hub/Gadi-Trinity):
 
 Jellyfish -> Inchworm -> Chrysalis -> Butterfly mini-assemblies -> Aggregate
 
