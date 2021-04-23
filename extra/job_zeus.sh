@@ -1,12 +1,13 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=Nextflow-master-nanopore
+#SBATCH --job-name=Nextflow-master-trinity
 #SBATCH --account=director2172
 #SBATCH --partition=longq
 #SBATCH --time=4-00:00:00
 #SBATCH --no-requeue
 #SBATCH --export=none
 
+module load singularity  # only needed if containers are yet to be downloaded
 module load nextflow
 
 nextflow run marcodelapierre/trinity-nf \

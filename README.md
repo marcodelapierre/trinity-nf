@@ -72,7 +72,7 @@ Typical information to be specified includes scheduler configuration, software a
 
 ### Additional resources
 
-The `extra` directory contains an example Slurm script, `job.sh`, to run on Zeus.  There is also a sample script `log.sh` that takes a run name as input and displays formatted runtime information.  
-It also contains scripts that can be used to install a patched version of Nextflow on Gadi at NCI, required to comply with its PBS configuration: `hack-nextflow-pbs-gadi.sh`, which in turn requires `patch.PbsProExecutor.groovy`.
+The `extra` directory contains an example Slurm script, `job_zeus.sh`, to run on Zeus, and an example PBS script, `job_gadi.sh`, to run on Gadi at NCI.  There is also a sample script `log.sh` that takes a run name as input and displays formatted runtime information.  
+This directory also contains scripts that can be used to install a patched version of Nextflow on Gadi at NCI, required to comply with its PBS configuration: `hack-nextflow-pbs-gadi.sh`, which in turn requires `patch.PbsProExecutor.groovy`.
 
 The `test` directory contains a small input dataset and launching scripts for quick testing of the pipeline (both for Zeus and Gadi), with total runtime of a few minutes.

@@ -1,20 +1,13 @@
 #!/bin/bash
 
-#PBS -N nxf-small
+#PBS -N Nextflow-master-trinity
 #PBS -P wz54
-#PBS -q express
+#PBS -q normal
 #PBS -l ncpus=1
-#PBS -l mem=8GB
-#PBS -l walltime=10:00
+#PBS -l walltime=48:00:00
 
 ### this is for when nextflow is on gdata
 #PBS -l storage=gdata/wz54
-
-### this is needed only when using test_gadi,localdisk
-###PBS -l jobfs=1GB
-
-### not needed as this is the default behaviour in Gadi
-###PBS -l storage=scratch/wz54
 
 #PBS -l wd
 #PBS -W umask=022
@@ -24,8 +17,9 @@ module load java/jdk-8.40
 NEXTFLOW_BIN_PATH="/g/data/wz54/nextflow-gadi"  #path to nextflow executable here
 export PATH=$NEXTFLOW_BIN_PATH:$PATH
 
-nextflow run main.nf \
+nextflow run marcodelapierre/trinity-nf \
   --reads='reads_{1,2}.fq.gz' \
-  --whoami=$USER \
-  -profile test_gadi \
-  -name nxf-${PBS_JOBID%.*}
+  -profile gadi --whoami=$USER --pbs_account='wz54' \
+  -name nxf-${PBS_JOBID%.*} \
+  -with-trace trace-${PBS_JOBID%.*}.txt \
+  -with-report report-${PBS_JOBID%.*}.html

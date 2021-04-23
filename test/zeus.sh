@@ -12,7 +12,7 @@
 
 unset SBATCH_EXPORT
 
-module load singularity
+module load singularity  # only needed if containers are yet to be downloaded
 module load nextflow
 
 nextflow run main.nf \
