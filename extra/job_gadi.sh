@@ -19,7 +19,7 @@ export PATH=$NEXTFLOW_BIN_PATH:$PATH
 
 nextflow run marcodelapierre/trinity-nf \
   --reads='reads_{1,2}.fq.gz' \
-  -profile gadi --whoami=$USER --pbs_account='wz54' \
+  -profile gadi,localdisk --whoami=$USER --pbs_account='wz54' \
   -name nxf-${PBS_JOBID%.*} \
   -with-trace trace-${PBS_JOBID%.*}.txt \
   -with-report report-${PBS_JOBID%.*}.html

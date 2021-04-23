@@ -11,7 +11,7 @@
 #PBS -l storage=gdata/wz54
 
 ### this is needed only when using test_gadi,localdisk
-###PBS -l jobfs=1GB
+#PBS -l jobfs=1GB
 
 ### not needed as this is the default behaviour in Gadi
 ###PBS -l storage=scratch/wz54
@@ -27,5 +27,5 @@ export PATH=$NEXTFLOW_BIN_PATH:$PATH
 nextflow run main.nf \
   --reads='reads_{1,2}.fq.gz' \
   --whoami=$USER \
-  -profile test_gadi \
+  -profile test_gadi,localdisk \
   -name nxf-${PBS_JOBID%.*}
