@@ -67,7 +67,9 @@ The main pipeline file, `main.nf`, contains the pipeline logic and its almost co
 All system specific information is contained in configuration files under the `config` directory, whose information is included in `nextflow.config`.  
 
 Examples are provided for Zeus and Nimbus at Pawsey, and Gadi at NCI;  you can use them as templates for other systems.  
-Typical information to be specified includes scheduler configuration, software availability (containers, conda, modules, ..), and eventually other specificities such as location of the work directory for runtime, filesystem options (*e.g.* set cache mode to *lenient* when using parallel filesystems), pipeline configurations (*e.g.* local directory naming for *localdisk*, size of *overlay* files).  
+Typical information to be specified includes scheduler configuration (including project name), software availability (containers, conda, modules, ..), and eventually other specificities such as location of the work directory for runtime, filesystem options (*e.g.* set cache mode to *lenient* when using parallel filesystems), pipeline configurations (*e.g.* local directory naming for *localdisk*, size of *overlay* files).  
+
+NOTE on Gadi:  it is assumed that all scripts and data required at runtime can be found in directories belonging to the PBS project that is specified in the `gadi.config` and in the pipeline submission script (the two must match).
 
 
 ### Additional resources
