@@ -1,4 +1,4 @@
-## Trinity assembly pipeline from USydney Informatics Hub
+## Trinity assembly pipeline for BioCommons / USydney Informatics Hub
 
 The pipeline requires [Nextflow](https://github.com/nextflow-io/nextflow) to run.
 DSL2 syntax is used, so that Nextflow version `20.07.1` or higher is required.
